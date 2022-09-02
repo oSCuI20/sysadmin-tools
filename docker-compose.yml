@@ -1,0 +1,34 @@
+version: '3'
+services:
+
+  nginx:
+    build: ./build/nginx
+    container_name: nginx-sysadmin-tools
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./config/nginx:/etc/nginx:ro
+      - ./config/supervisor:/etc/supervisor:ro
+      - ./config/uwsgi:/etc/uwsgi:ro
+      - ./src/backend:/var/www/backend:ro
+      - ./src/frontend:/var/www/frontend:ro
+      - ./logs:/var/log
+
+  # mysql:
+  #   image: mysql:5.7
+  #   environment:
+  #     MYSQL_DATABASE: sqli
+  #     MYSQL_ROOT_PASSWORD: password
+  #     MYSQL_USER: mysql
+  #     MYSQL_PASSWORD: password
+  #   ports:
+  #     - 3306:3306
+  #   volumes:
+  #     - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+  #     - ./mysql/init:/docker-entrypoint-initdb.d
+  #     - ./mysql/plugin:/usr/lib/mysql/plugin
+  #     - ./log/mysql/query.log:/var/log/mysql/query.log
+  #     - ./src:/var/www/html
