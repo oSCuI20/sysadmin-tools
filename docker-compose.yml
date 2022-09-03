@@ -18,7 +18,7 @@ services:
       - ./logs:/var/log
 
   # mysql:
-  #   image: mysql:5.7
+  #   build: ./build/mysql-8.0
   #   environment:
   #     MYSQL_DATABASE: sqli
   #     MYSQL_ROOT_PASSWORD: password
@@ -27,8 +27,7 @@ services:
   #   ports:
   #     - 3306:3306
   #   volumes:
-  #     - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
-  #     - ./mysql/init:/docker-entrypoint-initdb.d
+  #     - ./config/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+  #     - ./config/mysql/init:/docker-entrypoint-initdb.d
   #     - ./mysql/plugin:/usr/lib/mysql/plugin
   #     - ./log/mysql/query.log:/var/log/mysql/query.log
-  #     - ./src:/var/www/html

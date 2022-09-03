@@ -1,14 +1,20 @@
-FROM debian:11
+FROM debian:bullseye-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y dialog apt-utils procps net-tools
+    apt-get install -y --no-install-recommends gnupg dirmngr && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get install --no-install-recommends --no-install-suggests -y perl ca-certificates && \
+RUN set -eux; \
+    apt-get update && \
     apt-get install --no-install-recommends --no-install-suggests -y \
-                nginx supervisor fcgiwrap python3 python3-memcache
+                dialog apt-utils procps net-tools wget ca-certificates \
+                nginx supervisor fcgiwrap python3 gzip bzip2 openssl && \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+
+RUN apt-get update && \
+    apt-get upgrade --no-install-recommends --no-install-suggests -y
 
 EXPOSE 80
 EXPOSE 443
