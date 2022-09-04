@@ -1,9 +1,14 @@
-version: '3'
+version: '3.3'
 services:
 
   nginx:
     build: ./build/nginx
     container_name: nginx-sysadmin-tools
+    networks:
+      frontend:
+        ipv4_address: 172.16.90.20
+      backend:
+        ipv4_address: 172.16.80.20
     ports:
       - 80:80
       - 443:443
@@ -16,18 +21,38 @@ services:
       - ./src/backend:/var/www/backend:ro
       - ./src/frontend:/var/www/frontend:ro
       - ./logs:/var/log
+    depends_on:
+      - mariadb
 
-  # mysql:
-  #   build: ./build/mysql-8.0
-  #   environment:
-  #     MYSQL_DATABASE: sqli
-  #     MYSQL_ROOT_PASSWORD: password
-  #     MYSQL_USER: mysql
-  #     MYSQL_PASSWORD: password
-  #   ports:
-  #     - 3306:3306
-  #   volumes:
-  #     - ./config/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
-  #     - ./config/mysql/init:/docker-entrypoint-initdb.d
-  #     - ./mysql/plugin:/usr/lib/mysql/plugin
-  #     - ./log/mysql/query.log:/var/log/mysql/query.log
+  mariadb:
+    build: ./build/mariadb-server
+    container_name: mariadb-sysadmin-tools
+    networks:
+      backend:
+        ipv4_address: 172.16.80.10
+
+    environment:
+      MYSQL_DATABASE: SysAdminTools
+      MYSQL_ROOT_PASSWORD: thisismysecurepass
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: password
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./config/initdb.d:/initdb.d:ro
+      - ./config/mariadb:/etc/mysql
+      - ./logs/mysql:/var/log/mysql
+      - ./mysql:/var/lib/mysql
+
+networks:
+  frontend:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.90.0/24
+
+  backend:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.80.0/24
