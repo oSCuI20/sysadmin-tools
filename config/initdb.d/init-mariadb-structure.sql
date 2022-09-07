@@ -35,15 +35,19 @@ CREATE TABLE `endpoints` (
 -- END endpoints table
 
 CREATE TABLE `box` (
-  `id`          bigint(20)   NOT NULL AUTO_INCREMENT,
-  `uuid`        binary(32)   NOT NULL,
-  `description` varchar(255) NOT NULl DEFAULT '',
-  `product`     varchar(255) NOT NULl DEFAULT '',
-  `arch`        varchar(255) NOT NULl DEFAULT '',
-  `cpu`         varchar(255) NOT NULl DEFAULT '',
-  `ram`         int(11)      NOT NULL DEFAULT 0,
-  `created`     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated`     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id`            bigint(20)   NOT NULL AUTO_INCREMENT,
+  `uuid`          binary(32)   NOT NULL,         -- uuid is a hash sha256 of description, product, cpu_model,
+  `hwinfo`        text         NOT NULl DEFAULT '',
+  `arch`          varchar(255) NOT NULl DEFAULT '',
+  `cpu_model`     varchar(255) NOT NULl DEFAULT '',
+  `load_average`  varchar(255) NOT NULL DEFAULT '[0.0, 0.0, 0.0]',
+  `ram_total`     int(11)      NOT NULL DEFAULT 0,
+  `ram_free`      int(11)      NOT NULL DEFAULT 0,
+  `ram_available` int(11)      NOT NULL DEFAULT 0,
+  `ram_buffers`   int(11)      NOT NULL DEFAULT 0,
+  `ram_cached`    int(11)      NOT NULL DEFAULT 0,
+  `created`       timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated`       timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`id`),
 
@@ -69,7 +73,8 @@ CREATE TABLE `networks` (
 -- END networks table
 
 CREATE TABLE `routing` (
-  `id`             bigint(20)   NOT NULL AUTO_INCREMENT,
+  `id`    bigint(20)   NOT NULL AUTO_INCREMENT,
+  `info`  varchar(512) NOT NULL DEFAULT '',
 
   PRIMARY KEY (`id`)
 
@@ -84,9 +89,14 @@ CREATE TABLE `services` (
 -- END services table
 
 CREATE TABLE `software` (
-  `id`         bigint(20)   NOT NULL AUTO_INCREMENT,
+  `id`          bigint(20)   NOT NULL AUTO_INCREMENT,
+  `name`        varchar(255) NOT NULL DEFAULT '',
+  `version`     varchar(32)  NOT NULL DEFAULT '',
+  `arch`        varchar(32)  NOT NULL DEFAULT '',
+  `description` varchar(512) NOT NULL DEFAULT '',
 
   PRIMARY KEY (`id`)
+
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 -- END software table
 

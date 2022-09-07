@@ -21,6 +21,9 @@ import os, socket, platform, json
 from fcntl  import ioctl
 from struct import pack, unpack
 
+from utils import readfile, writefile
+
+
 class Device(object):
 
   def __init__(self):
@@ -34,6 +37,7 @@ class Device(object):
     self.__disks     = None
     self.__process   = None
     self.__routing   = None
+    self.__hwinfo    = None
   #__init__
 
   def __iter__(self):
@@ -46,7 +50,8 @@ class Device(object):
       'loadavg': self.loadavg,
       'meminfo': self.meminfo,
       'hostname': self.hostname,
-      'cpu_model': self.cpu_model
+      'cpu_model': self.cpu_model,
+      'hwinfo': self.hwinfo
     }.items()
   #__iter__
 
@@ -57,6 +62,34 @@ class Device(object):
   def __repr__(self):
     return self.__str__()
   #__repr__
+
+  @property
+  def hwinfo(self):
+    if not self.__hwinfo:
+      self.__hwinfo = {
+        'bios':    { 'date': None, 'version': None, 'release': None, 'vendor': None },
+        'board':   { 'name': None, 'version': None, 'serial': None, 'vendor': None },
+        'chassis': { 'type': None, 'version': None, 'serial': None, 'vendor': None },
+        'product': { 'name': None, 'version': None, 'serial': None, 'family': None, 'uuid': None, }
+      }
+
+      path = '/sys/devices/virtual/dmi/id'
+      if os.path.exists(path):
+        for key, values in self.__hwinfo.items():
+          for val in values.keys():
+            self.__hwinfo[key][val] = readfile(f'{path}/{key}_{val}').strip()
+
+      else:
+        path = '/sys/firmware/devicetree/base'
+        self.__hwinfo['product']['family'] = readfile(f'{path}/model').strip()
+        self.__hwinfo['product']['name']   = readfile(f'{path}/name').strip()
+
+      if not self.__hwinfo['product']['uuid']:
+        #TODO generate random uuid
+        pass
+
+    return self.__hwinfo
+  #hwinfo
 
   @property
   def process(self):
@@ -77,7 +110,7 @@ class Device(object):
           'uid': st.st_uid,
           'gid': st.st_gid,
           'pid': pid,
-          'cmdline': self.__readfile(f'{p}/cmdline').strip()
+          'cmdline': readfile(f'{p}/cmdline').strip()
         })
       #endfor
 
@@ -89,7 +122,7 @@ class Device(object):
     if not self.__routing:
       self.__routing = []
 
-      info = self.__readfile('/proc/net/route').strip().split('\n')
+      info = readfile('/proc/net/route').strip().split('\n')
       headers = [ _.strip() for _ in info.pop(0).split('\t') if _ ]
 
       for d in info:
@@ -161,7 +194,7 @@ class Device(object):
 
           partitions.append({
             'name': partition,
-            'size': int(self.__readfile(f'{path}/{disk}/{partition}/size')) * 512,
+            'size': int(readfile(f'{path}/{disk}/{partition}/size')) * 512,
             'mountpoint': m,
             'free': f,
             'used': u
@@ -169,9 +202,9 @@ class Device(object):
         #endfor
 
         self.__disks.update({ disk: {
-          'size': int(self.__readfile(f'{path}/{disk}/size')) * 512,
-          'model': self.__readfile(f'{path}/{disk}/device/model').strip(),
-          'serial': self.__readfile(f'{path}/{disk}/device/serial').strip(),
+          'size': int(readfile(f'{path}/{disk}/size')) * 512,
+          'model': readfile(f'{path}/{disk}/device/model').strip(),
+          'serial': readfile(f'{path}/{disk}/device/serial').strip(),
           'partitions': partitions
         }})
       #endfor
@@ -182,7 +215,7 @@ class Device(object):
   @property
   def loadavg(self):
     if not self.__loadavg:
-      self.__loadavg = [ round(float(_), 2) for _ in self.__readfile('/proc/loadavg').split()[0:3] ]
+      self.__loadavg = [ round(float(_), 2) for _ in readfile('/proc/loadavg').split()[0:3] ]
 
     return self.__loadavg
   #loadavg
@@ -193,7 +226,7 @@ class Device(object):
       self.__meminfo = { 'MemTotal': 0, 'MemFree': 0, 'MemAvailable': 0,
                          'Buffers': 0, 'Cached': 0, 'SwapTotal': 0, 'SwapFree': 0 }
 
-      info = self.__readfile('/proc/meminfo')
+      info = readfile('/proc/meminfo')
       for c in info.split('\n'):
         if not c:    continue
 
@@ -217,7 +250,7 @@ class Device(object):
   @property
   def cpu_model(self):
     if not self.__cpu_model:
-      info = self.__readfile('/proc/cpuinfo')
+      info = readfile('/proc/cpuinfo')
       for c in info.split('\n'):
         if not self.__cpu_model and c.startswith('model name'):
           self.__cpu_model = f'{c.split(":")[1].strip()}'
@@ -227,16 +260,8 @@ class Device(object):
     return self.__cpu_model
   #cpu_model
 
-  def __readfile(self, filename):
-    out = ''
-    with open(filename, 'r') as fr:
-      out = fr.read()
-
-    return out
-  #__readfile
-
   def __getdiskinfo(self, partition):
-    info = self.__readfile('/proc/mounts')
+    info = readfile('/proc/mounts')
     mountpoint = None
     used = None
     free = None
