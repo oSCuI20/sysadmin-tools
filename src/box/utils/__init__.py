@@ -6,4 +6,6 @@
 #
 # utils
 #
-from .file import *
+from .file   import *
+from .logger import Logger
+from .stats  import DiskStats, CPUStats, NetworkStats
