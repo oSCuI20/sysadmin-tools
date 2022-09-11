@@ -18,6 +18,7 @@
 #
 import os, socket, platform, json
 
+from uuid   import uuid4 as uuid  # UUID V4
 from fcntl  import ioctl
 from struct import pack, unpack
 
@@ -37,6 +38,8 @@ class Device(object):
     self.__disks     = None
     self.__process   = None
     self.__routing   = None
+
+    self.__fileinfo  = f'{os.getcwd()}/.device-info'
     self.__hwinfo    = None
   #__init__
 
@@ -63,14 +66,29 @@ class Device(object):
     return self.__str__()
   #__repr__
 
+  def __wr_device_info__(self, dev):
+    writefile(self.__fileinfo, json.dumps(dev))
+  #__wr_device_info__
+
+  def __get_device_info__(self):
+    info = { 'uuid': None, 'seed': None }
+    try:
+      info = json.loads(readfile(self.__fileinfo))
+    except:
+      pass
+
+    return info
+  #__get_device_info__
+
   @property
   def hwinfo(self):
     if not self.__hwinfo:
       self.__hwinfo = {
-        'bios':    { 'date': None, 'version': None, 'release': None, 'vendor': None },
-        'board':   { 'name': None, 'version': None, 'serial': None, 'vendor': None },
-        'chassis': { 'type': None, 'version': None, 'serial': None, 'vendor': None },
-        'product': { 'name': None, 'version': None, 'serial': None, 'family': None, 'uuid': None, }
+        'bios':    {'date': None, 'version': None, 'release': None, 'vendor': None},
+        'board':   {'name': None, 'version': None, 'serial' : None, 'vendor': None},
+        'chassis': {'type': None, 'version': None, 'serial' : None, 'vendor': None},
+        'product': {'name': None, 'version': None, 'serial' : None, 'family': None,
+                    'uuid': None}
       }
 
       path = '/sys/devices/virtual/dmi/id'
@@ -84,9 +102,16 @@ class Device(object):
         self.__hwinfo['product']['family'] = readfile(f'{path}/model').strip()
         self.__hwinfo['product']['name']   = readfile(f'{path}/name').strip()
 
-      if not self.__hwinfo['product']['uuid']:
-        #TODO generate random uuid
-        pass
+      about_device = self.__get_device_info__()
+
+      if not about_device['uuid']:
+        about_device['uuid'] = str(uuid())
+        about_device['seed'] = str(uuid())
+
+        self.__wr_device_info__(about_device)
+      #endif
+
+      self.__hwinfo['product'].update(about_device)
 
     return self.__hwinfo
   #hwinfo

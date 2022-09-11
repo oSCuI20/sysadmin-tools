@@ -27,12 +27,13 @@ class CPUStats(object):
 
   ticks = os.sysconf(os.sysconf_names['SC_CLK_TCK']) #Clock ticks per seconds
 
-  def __init__(self, interval=1, warning=45, critical=90):
+  def __init__(self, warning=45, critical=90, cb=None):
     self.logger    = Logger()
     self.cpus      = {}
-    self.interval  = interval
     self.terminate = False
 
+    self.callback = cb
+    self.interval = 1
     self.warning  = warning
     self.critical = critical
 
@@ -156,14 +157,15 @@ class DiskStats(object):
     'sectors_written': 'wb/s'
   }
 
-  def __init__(self, interval=1, warning=1*1024*1024, critical=10*1024*1024):
+  def __init__(self, warning=1*1024*1024, critical=10*1024*1024, cb=None):
     self.logger    = Logger()
     self.disks     = {}
-    self.interval  = interval
     self.terminate = False
 
     self.sector_size = 512
 
+    self.callback = cb
+    self.interval = 1
     self.warning  = warning  # default 1MB
     self.critical = critical # default 10MB
 
@@ -292,7 +294,8 @@ class DiskStats(object):
 #class DiskStats
 
 class NetworkStats(object):
-
+  # /sys/class/net (list device network)
+  # /proc/net/dev stats
   __receive_mapping__ = {
     'bytes':      0,
     'packets':    1,
@@ -315,12 +318,13 @@ class NetworkStats(object):
     'compressed': 15
   }
 
-  def __init__(self, interval=1, warning=0, critical=0):
+  def __init__(self, warning=0, critical=0, cb=None):
     self.logger    = Logger()
     self.networks  = {}
-    self.interval  = interval
     self.terminate = False
 
+    self.callback = cb
+    self.interval = 1
     self.warning  = warning
     self.critical = critical
 
@@ -354,11 +358,7 @@ class NetworkStats(object):
         if net in [ 'fd' ]:
           continue
 
-        receive.append(f"{net} {self.networks[net]['receive']['kb/s']} kb/s")
-        receive.append(f"{net} {self.networks[net]['receive']['packet/s']} packet/s")
-
-        transmit.append(f"{net} {self.networks[net]['transmit']['kb/s']} kb/s")
-        transmit.append(f"{net} {self.networks[net]['transmit']['packet/s']} packet/s")
+        #TODO callback
       #endfor
 
       self.logger.log((-2, ' '.join(receive)))
@@ -391,13 +391,13 @@ class NetworkStats(object):
 
     return {
       'receive': {
-        'kb/s': (current['receive']['bytes'] - previous['receive']['bytes']) / 1024,
+        'bytes/s': (current['receive']['bytes'] - previous['receive']['bytes']),
         'packet/s': current['receive']['packets'] - previous['receive']['packets'],
         'err/s': current['receive']['errs'] - previous['receive']['errs'],
         'drop/s': current['receive']['drop'] - previous['receive']['drop']
       },
       'transmit': {
-        'kb/s': (current['transmit']['bytes'] - previous['transmit']['bytes']) / 1024,
+        'bytes/s': (current['transmit']['bytes'] - previous['transmit']['bytes']),
         'packet/s': current['transmit']['packets'] - previous['transmit']['packets'],
         'err/s': current['transmit']['errs'] - previous['transmit']['errs'],
         'drop/s': current['transmit']['drop'] - previous['transmit']['drop']
