@@ -11,7 +11,7 @@ def readfile(filename, mode='r'):
   with open(filename, mode) as fr:
     out = fr.read()
 
-  return out
+  return out.strip()
 #readfile
 
 

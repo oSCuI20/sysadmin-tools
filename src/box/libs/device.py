@@ -95,12 +95,12 @@ class Device(object):
       if os.path.exists(path):
         for key, values in self.__hwinfo.items():
           for val in values.keys():
-            self.__hwinfo[key][val] = readfile(f'{path}/{key}_{val}').strip()
+            self.__hwinfo[key][val] = readfile(f'{path}/{key}_{val}')
 
       else:
         path = '/sys/firmware/devicetree/base'
-        self.__hwinfo['product']['family'] = readfile(f'{path}/model').strip()
-        self.__hwinfo['product']['name']   = readfile(f'{path}/name').strip()
+        self.__hwinfo['product']['family'] = readfile(f'{path}/model')
+        self.__hwinfo['product']['name']   = readfile(f'{path}/name')
 
       about_device = self.__get_device_info__()
 
@@ -135,7 +135,7 @@ class Device(object):
           'uid': st.st_uid,
           'gid': st.st_gid,
           'pid': pid,
-          'cmdline': readfile(f'{p}/cmdline').strip()
+          'cmdline': readfile(f'{p}/cmdline')
         })
       #endfor
 
@@ -147,7 +147,7 @@ class Device(object):
     if not self.__routing:
       self.__routing = []
 
-      info = readfile('/proc/net/route').strip().split('\n')
+      info = readfile('/proc/net/route').split('\n')
       headers = [ _.strip() for _ in info.pop(0).split('\t') if _ ]
 
       for d in info:
@@ -228,8 +228,8 @@ class Device(object):
 
         self.__disks.update({ disk: {
           'size': int(readfile(f'{path}/{disk}/size')) * 512,
-          'model': readfile(f'{path}/{disk}/device/model').strip(),
-          'serial': readfile(f'{path}/{disk}/device/serial').strip(),
+          'model': readfile(f'{path}/{disk}/device/model'),
+          'serial': readfile(f'{path}/{disk}/device/serial'),
           'partitions': partitions
         }})
       #endfor

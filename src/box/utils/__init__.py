@@ -9,3 +9,4 @@
 from .file   import *
 from .logger import Logger
 from .stats  import DiskStats, CPUStats, NetworkStats
+from .daemon import Daemon
