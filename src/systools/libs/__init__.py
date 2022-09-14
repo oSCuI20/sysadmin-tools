@@ -4,6 +4,6 @@
 # Eduardo Banderas Alba
 # 2022-09
 #
-# modules
+# library
 #
-from .device import Device
+from .pcap._capture import Capture
