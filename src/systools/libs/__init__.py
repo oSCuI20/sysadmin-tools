@@ -6,4 +6,5 @@
 #
 # library
 #
-from .pcap._capture import Capture
+from .pcap._capture    import Capture
+from .pcap._sendpacket import SendPacket
