@@ -44,10 +44,11 @@ class tcp(Layer):
     53:  'dns'
   }
 
+  properties = [ 'src', 'dst', 'seq_number', 'checksum',
+                 'acknowledgement_number', 'header_length', 'window_size',
+                 'stateful' ]
+
   def __init__(self, raw):
-    self.__properties = [ 'src', 'dst', 'seq_number', 'checksum',
-                          'acknowledgement_number', 'header_length', 'window_size',
-                          'stateful', 'pktdata' ]
     super().__init__(raw)
   #__init__
 
@@ -111,7 +112,7 @@ class tcp(Layer):
       mbit += 'S' if self.stateful['syn'] else 's'
       mbit += 'F' if self.stateful['fin'] else 'f'
 
-      return f'[{mbit}] seq: {self.seq_number} wsize: {self.window_size} checksum: {self.checksum} {msg}' 
+      return f'[{mbit}] seq: {self.seq_number} wsize: {self.window_size} checksum: {self.checksum} {msg}'
 
     return locals()
   #end definition format property

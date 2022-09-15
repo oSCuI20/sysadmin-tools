@@ -172,9 +172,10 @@ class ipv4(Layer):
     0x11: 'udp',               # User Datagram Protocol
   }
 
+  properties = [ 'dst', 'src', 'version', 'header_length', 'total_length', 'ttl',
+                 'protocol_id', 'checksum' ]
+
   def __init__(self, raw):
-    self.__properties = [ 'dst', 'src', 'version', 'header_length', 'total_length', 'ttl',
-                          'protocol_id', 'checksum', 'format' ]
     super().__init__(raw)
   #__init__
 

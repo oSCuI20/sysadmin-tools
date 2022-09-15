@@ -28,8 +28,9 @@ class udp(Layer):
     53:  'dns'
   }
 
+  properties = [ 'src', 'dst', 'length', 'checksum' ]
+
   def __init__(self, raw):
-    self.__properties = [ 'src', 'dst', 'length', 'checksum', 'pktdata' ]
     super().__init__(raw)
   #__init__
 

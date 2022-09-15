@@ -55,7 +55,7 @@ class dhcp(ApplicationLayer):
   def format():
     def fget(self):
       operation_code = self.__operation_codes.get(self.op)
-      request_from   = ':'.join(map(tohex, self.chaddr[0:self.hlen]))
+      request_from   = self.chaddr[0:self.hlen].hex(':') #':'.join(map(tohex, self.chaddr[0:self.hlen]))
       return f'BOOTP/DHCP {operation_code} from {request_from} {self.ciaddr} {self.yiaddr} {self.siaddr} {self.giaddr}'
 
     return locals()

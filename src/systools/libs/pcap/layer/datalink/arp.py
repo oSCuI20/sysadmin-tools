@@ -32,10 +32,11 @@ class arp(Layer):
     0x02: 'ARP Reply'
   }
 
+  properties = [ 'htype', 'ptype', 'hlen', 'plen',
+                 'op', 'opmode', 'sha', 'spa', 'tha', 'tpa',
+                 'format', 'pktdata' ]
+
   def __init__(self, raw):
-    self.__properties = [ 'htype', 'ptype', 'hlen', 'plen',
-                          'op', 'opmode', 'sha', 'spa', 'tha', 'tpa',
-                          'format', 'pktdata' ]
     super().__init__(raw)
   #__init__
 
@@ -55,7 +56,7 @@ class arp(Layer):
 
   def format():
     def fget(self):
-      return f'{self.opmode} {self.sha} ({self.spa}) -> {self.tha} ({self.tpa}) {self._module.format}'
+      return f'{self.opmode} {self.sha} ({self.spa}) -> {self.tha} ({self.tpa})'
 
     return locals()
   #end definition format property
@@ -170,7 +171,7 @@ class arp(Layer):
       if len(v) != self.__IP_LEN:
         raise ARPException(f'ERROR: spa should be {self.__IPLEN} bytes')
 
-      self.__spa = v.hex(':')
+      self.__spa = '.'.join(map(str, v))
 
     def fdel(self):
       del self.__spa

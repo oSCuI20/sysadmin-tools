@@ -17,12 +17,12 @@ class Layer(Constants):
   _HEADER_LEN    = 0
   _unpack_format = None
 
+  properties = []
+
   def __init__(self, raw):
     self.pktlen    = len(raw)
     self.pktheader = raw[:self._HEADER_LEN]
     self.pktdata   = raw[self._HEADER_LEN:]
-
-    self.__properties = []
 
     self._header()
     self._data()
@@ -38,7 +38,7 @@ class Layer(Constants):
         result[mod.__class__.__name__] = dict(mod)
         mod = mod._module
       #endwhile
-
+      
       result[mod.__class__.__name__] = dict(mod)
     #endif
 
@@ -46,7 +46,7 @@ class Layer(Constants):
   #__str__
 
   def __iter__(self):
-    for k in self.__properties:
+    for k in self.properties:
       if not hasattr(self, k):
         continue
 
@@ -55,8 +55,6 @@ class Layer(Constants):
 
   def _load_module(self, path, module):
     if path and self.pktdata:
-      if module not in self.__properties:
-        self.__properties.append(module)
 
       obj = getattr(importlib.import_module(path, package=module), module)
       self._module = obj(self.pktdata)
@@ -132,16 +130,16 @@ class ApplicationLayer(object):
 
   __pktdata = None
 
-  def __init__(self, raw):
-    self.__properties = [ 'data' ]
+  properties = [ 'data' ]
 
+  def __init__(self, raw):
     self.pktdata = raw
 
     self._data()
   #__init__
 
   def __iter__(self):
-    for k in self.__properties:
+    for k in self.properties:
       if not hasattr(self, k):
         continue
 

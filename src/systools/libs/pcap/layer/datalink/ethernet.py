@@ -26,9 +26,11 @@ class Ethernet(Layer):
     0x0806: 'arp'
   }
 
+  properties = [ 'dst', 'src', 'proto' ]
+  
   def __init__(self, raw):
-    self.__properties = [ 'dst', 'src', 'proto' ]
     super().__init__(raw)
+  #__init__
 
   def _header(self):
     self.dst, self.src, self.proto = self.pktheader
