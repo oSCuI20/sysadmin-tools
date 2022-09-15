@@ -1,2 +1,2 @@
 # Include all endpoints
-__all__ = [ 'login' ]
+__all__ = [ 'users' ]
