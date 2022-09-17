@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 #
-# ./netpacket/arpspoof.py
+# ./netpacket/arp.py
 # Eduardo Banderas Alba
 # 2022-08
 #
-# Envenenar tabla arp
+# ARP Packet
 #
 from struct import pack
 
 
-class ARPSpoofPacket(object):
-
-  _pack_format = '!HHBBH 6s 4s 6s 4s'
+class ARPPacket(object):
 
   # Ethernet
   __dst       = None   #6 bytes
@@ -23,46 +21,26 @@ class ARPSpoofPacket(object):
   __ptype = pack('!H', 0x0800)  #2 bytes  protocol type
   __hlen  = pack('!B', 0x06)    #1 byte   hardware length
   __plen  = pack('!B', 0x04)    #1 byte   protocol length
-  __op    = pack('!H', 0x02)    #2 bytes  op code
+  __op    = None                #2 bytes  op code
   __sha   = None                #6 bytes  sender hardware address
   __spa   = None                #4 bytes  sender protocol address
   __tha   = None                #6 bytes  target hardware address
   __tpa   = None                #4 bytes  target protocol address
 
-  __mac_attacker = None
-
-  def __init__(self, mac_target, dst, src, ip_dst, ip_src):
+  def __init__(self, op, dst, src, ip_dst, ip_src):
+    self.op  = op
     self.dst = dst      # set tha
     self.src = src      # set sha
 
     self.tpa = ip_dst
     self.spa = ip_src
-
-    self.mac_attacker = mac_target
   #__init__
 
-  def payload(self, poison=True):
-    # First 14 bytes. dst is mac victim, mac_attacker is local mac for MITM
-    if not poison:
-      self.op = 0x01
-      self.dst = 'ff:ff:ff:ff:ff:ff'
-
-    return self.dst + \
-           (self.mac_attacker if poison else self.src) + \
-           self.ethertype + \
-           self.htype + \
-           self.ptype + \
-           self.hlen + \
-           self.plen + \
-           self.op + \
-           (self.mac_attacker if poison else self.sha) + \
-           self.spa + \
-           self.tha + \
-           self.tpa
+  def payload(self):
+    return self.dst + self.src + self.ethertype + \
+           self.htype + self.ptype + self.hlen + self.plen + self.op + \
+           self.sha + self.spa + self.tha + self.tpa
   #payload
-
-  def padding(self):
-    return b''
 
   def ethertype():
     doc = "The ethertype property."
@@ -234,20 +212,6 @@ class ARPSpoofPacket(object):
     return locals()
   #end definition tpa property
 
-  def mac_attacker():
-    doc = "The mac_attacker property."
-    def fget(self):
-      return self.__mac_attacker
-
-    def fset(self, v):
-      self.__mac_attacker = bytes.fromhex(''.join([ f'{int(x, 16):02x}' for x in v.split(':') ]))
-
-    def fdel(self):
-      del self.__mac_attacker
-
-    return locals()
-  #end definition mac_attacket property
-
   src   = property(**src())
   dst   = property(**dst())
   htype = property(**htype())
@@ -259,6 +223,5 @@ class ARPSpoofPacket(object):
   spa   = property(**spa())
   tha   = property(**tha())
   tpa   = property(**tpa())
-  ethertype    = property(**ethertype())
-  mac_attacker = property(**mac_attacker())
+  ethertype = property(**ethertype())
 #class ARPSpoofPacket
