@@ -9,7 +9,7 @@
 from ..layer import Layer, LayerException
 
 
-class tcp(Layer):
+class TCP(Layer):
 
   _HEADER_LEN    = 20
   _unpack_format = '!HHLLHHHH'
@@ -37,11 +37,11 @@ class tcp(Layer):
 
   __protocol = None
   __support  = {
-    80:  'http',
-    443: 'https',
-    20:  'ftp',
-    21:  'ftp',
-    53:  'dns'
+    80:  'HTTP',
+    443: 'HTTPS',
+    20:  'FTP',
+    21:  'FTP',
+    53:  'DNS'
   }
 
   properties = [ 'src', 'dst', 'seq_number', 'checksum',
@@ -75,8 +75,8 @@ class tcp(Layer):
   def _data(self):
     if self.protocol:
       mod = None
-      if self.protocol in self.APPLICATION:
-        mod = f'{self.PATHLIB}.application.{self.protocol}'
+      if self.protocol.lower() in self.APPLICATION:
+        mod = f'{self.PATHLIB}.application.{self.protocol.lower()}'
 
       self._load_module(mod, self.protocol)
   #_data

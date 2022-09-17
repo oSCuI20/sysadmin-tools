@@ -9,10 +9,10 @@ class Constants(object):
 
   PATHLIB  = 'libs.pcap.layer'
 
-  DATALINK     = [ 'arp' ]  #arp
-  NETWORK      = [ 'ipv4' ]
-  TRANSPORT    = [ 'udp', 'tcp', 'icmp', 'igmp']
+  DATALINK     = [ 'ARP' ]  #arp
+  NETWORK      = [ 'IPv4' ]
+  TRANSPORT    = [ 'UDP', 'TCP', 'ICMP', 'IGMP']
   SESSION      = [ ]
   PRESENTATION = [ ]
-  APPLICATION  = [ 'dhcp', 'dns', 'http', 'https', 'ftp']
+  APPLICATION  = [ 'DHCP', 'DNS', 'HTTP', 'HTTPS', 'FTP']
 #class Constants

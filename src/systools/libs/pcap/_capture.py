@@ -8,7 +8,7 @@
 #
 from ._pcap_handle import PCAPHandle
 from ._pcap        import pcap_next_ex, pcap_compile, pcap_setfilter
-from .layer        import Ethernet
+from .layer        import Ether
 
 from ctypes import c_int, c_ubyte, byref, POINTER
 from time   import sleep
@@ -27,17 +27,18 @@ class Capture(PCAPHandle):
           (self.limit.value > counter and not self.terminate):
       if pcap_next_ex(self.handle, byref(self.pkthdr), byref(self.pktdata)) == 1:
         caplen = self.pkthdr.contents.caplen
-        packet = Ethernet(pack('B' * caplen, *self.pktdata.contents[:caplen]))
+        packet = Ether(pack('B' * caplen, *self.pktdata.contents[:caplen]))
 
         if self.callback:
           self.callback(packet)
 
-        self.logger.log((-1, packet))
+        #self.logger.log((-1, packet))
         counter += 1
       #endif
 
       sleep(0.1)
     #endwhile
+  #sniff
 
   def setFilter(self):
     if not self.filter:

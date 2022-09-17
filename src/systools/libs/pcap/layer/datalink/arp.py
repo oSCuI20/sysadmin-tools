@@ -6,10 +6,10 @@
 #
 # arp packages
 #
-from ..layer import Layer, LayerException
+from ..layer   import Layer, LayerException
 
 
-class arp(Layer):
+class ARP(Layer):
 
   _HEADER_LEN    = 28
   _unpack_format = '!HHBBH 6s 4s 6s 4s'
@@ -232,6 +232,7 @@ class arp(Layer):
   tpa    = property(**tpa())
 #class arp
 
+
 class ARPException(LayerException):
   pass
-#class EthernetException
+#class ARPException

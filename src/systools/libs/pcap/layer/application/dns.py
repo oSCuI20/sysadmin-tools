@@ -7,7 +7,7 @@
 from ..layer import ApplicationLayer, ApplicationException
 
 
-class dns(ApplicationLayer):
+class DNS(ApplicationLayer):
 
   __operation_codes = {
     0x00: 'Query',

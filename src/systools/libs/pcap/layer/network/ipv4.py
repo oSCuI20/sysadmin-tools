@@ -9,7 +9,7 @@
 from ..layer import Layer, LayerException
 
 
-class ipv4(Layer):
+class IPv4(Layer):
 
   _HEADER_LEN    = 20
   _unpack_format = '!BBHHHBBH 4s 4s'
@@ -164,16 +164,16 @@ class ipv4(Layer):
   }
 
   __type_protocol_support = {
-    0x01: 'icmp',              # Internet Control Message Protocol
-    0x02: 'igmp',              # Internet Group Management Protocol
-    0x06: 'tcp',               # Transmission Control Protocol
-    0x08: 'egp',               # Exterior Gateway Protocol
-    0x09: 'igp',               # Interior Gateway Protocol (any private interior gateway (used by Cisco for their IGRP))
-    0x11: 'udp',               # User Datagram Protocol
+    0x01: 'ICMP',              # Internet Control Message Protocol
+    0x02: 'IGMP',              # Internet Group Management Protocol
+    0x06: 'TCP',               # Transmission Control Protocol
+    0x08: 'EGP',               # Exterior Gateway Protocol
+    0x09: 'IGP',               # Interior Gateway Protocol (any private interior gateway (used by Cisco for their IGRP))
+    0x11: 'UDP',               # User Datagram Protocol
   }
 
   properties = [ 'dst', 'src', 'version', 'header_length', 'total_length', 'ttl',
-                 'protocol_id', 'checksum' ]
+                 'identifier', 'protocol_id', 'checksum' ]
 
   def __init__(self, raw):
     super().__init__(raw)
@@ -183,7 +183,7 @@ class ipv4(Layer):
     version_length, \
     type,\
     self.total_length, \
-    identifier, \
+    self.identifier, \
     flag_fragment, \
     self.ttl, \
     self.protocol_id, \
@@ -199,7 +199,7 @@ class ipv4(Layer):
     if self.protocol:
       mod = None
       if self.protocol in self.TRANSPORT:
-        mod = f'{self.PATHLIB}.transport.{self.protocol}'
+        mod = f'{self.PATHLIB}.transport.{self.protocol.lower()}'
 
       self._load_module(mod, self.protocol)
   #_data
@@ -207,7 +207,7 @@ class ipv4(Layer):
   def format():
     def fget(self):
       msg = f'{self.protocol.upper()} '
-      if self.protocol in [ 'tcp', 'udp' ]:
+      if self.protocol in [ 'TCP', 'UDP' ]:
         msg += f'ttl: {self.ttl} src {self.src}:{self._module.src} ' + \
                f'-> dst {self.dst}:{self._module.dst} {self._module.format}'
 
@@ -219,13 +219,27 @@ class ipv4(Layer):
     return locals()
   #end definition format property
 
+  def identifier():
+    doc = "The identifier property."
+    def fget(self):
+      return self.__identifier
+
+    def fset(self, v):
+      self.__identifier = v
+
+    def fdel(self):
+      del self.__identifier
+
+    return locals()
+  #end definition identifier property
+
   def checksum():
     doc = "The checksum property."
     def fget(self):
       return self.__checksum
 
     def fset(self, v):
-      self.___checksum = v
+      self.__checksum = v
 
     def fdel(self):
       del self.__checksum
@@ -253,7 +267,7 @@ class ipv4(Layer):
       return self.__protocol_id
 
     def fset(self, v):
-      self.protocol     = v
+      self.protocol      = v
       self.__protocol_id = hex(v)
 
     def fdel(self):

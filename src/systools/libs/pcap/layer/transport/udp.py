@@ -9,7 +9,7 @@
 from ..layer import Layer, LayerException
 
 
-class udp(Layer):
+class UDP(Layer):
 
   _HEADER_LEN = 8
   _unpack_format = '!HHHH'
@@ -21,11 +21,11 @@ class udp(Layer):
 
   __protocol = None
   __support  = {
-    80:  'http',
-    443: 'https',
-    67:  'dhcp',
-    68:  'dhcp',
-    53:  'dns'
+    80:  'HTTP',
+    443: 'HTTPS',
+    67:  'DHCP',
+    68:  'DHCP',
+    53:  'DNS'
   }
 
   properties = [ 'src', 'dst', 'length', 'checksum' ]
@@ -46,7 +46,7 @@ class udp(Layer):
     if self.protocol:
       mod = None
       if self.protocol in self.APPLICATION:
-        mod = f'{self.PATHLIB}.application.{self.protocol}'
+        mod = f'{self.PATHLIB}.application.{self.protocol.lower()}'
 
       self._load_module(mod, self.protocol)
   #_data

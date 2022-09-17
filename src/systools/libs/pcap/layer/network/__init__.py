@@ -6,4 +6,4 @@
 #
 # library
 #
-from .ipv4 import ipv4
+from .ipv4 import IPv4

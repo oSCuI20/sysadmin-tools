@@ -7,7 +7,7 @@
 from ..layer import ApplicationLayer, ApplicationException
 
 
-class dhcp(ApplicationLayer):
+class DHCP(ApplicationLayer):
 
   __operation_codes = {
     0x01: 'Request',

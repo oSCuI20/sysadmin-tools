@@ -7,6 +7,6 @@
 from ..layer import ApplicationLayer, ApplicationException
 
 
-class https(ApplicationLayer):
+class HTTPS(ApplicationLayer):
   pass
 #class https

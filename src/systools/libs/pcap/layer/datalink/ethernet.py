@@ -9,7 +9,7 @@
 from ..layer import Layer, LayerException
 
 
-class Ethernet(Layer):
+class Ether(Layer):
 
   _HEADER_LEN    = 14
   _unpack_format = '!6s 6s H'
@@ -21,13 +21,13 @@ class Ethernet(Layer):
   __MAC_LEN   = 6
   __ethertype = {
     None  : 'ethernet header not recognize',
-    0x0800: 'ipv4',
+    0x0800: 'IPv4',
     #0x86DD: 'ipv6',
-    0x0806: 'arp'
+    0x0806: 'ARP'
   }
 
   properties = [ 'dst', 'src', 'proto' ]
-  
+
   def __init__(self, raw):
     super().__init__(raw)
   #__init__
@@ -40,10 +40,10 @@ class Ethernet(Layer):
     if self.protoid:
       mod = None
       if   self.protoid in self.DATALINK:
-        mod = f'{self.PATHLIB}.datalink.{self.protoid}'
+        mod = f'{self.PATHLIB}.datalink.{self.protoid.lower()}'
 
       elif self.protoid in self.NETWORK:
-        mod = f'{self.PATHLIB}.network.{self.protoid}'
+        mod = f'{self.PATHLIB}.network.{self.protoid.lower()}'
 
       self._load_module(mod, self.protoid)
   #_data
@@ -95,10 +95,10 @@ class Ethernet(Layer):
 
     def fset(self, v):
       if not isinstance(v, bytes):
-        raise EthernetException(f'ERROR: src mac address is not bytes type {type(v)}')
+        raise EtherException(f'ERROR: src mac address is not bytes type {type(v)}')
 
       if len(v) != self.__MAC_LEN:
-        raise EthernetException(f'ERROR: src mac address should be {self.__MAC_LEN} bytes')
+        raise EtherException(f'ERROR: src mac address should be {self.__MAC_LEN} bytes')
 
       self._src = v.hex(':') #':'.join(map(tohex, v))
 
@@ -115,10 +115,10 @@ class Ethernet(Layer):
 
     def fset(self, v):
       if not isinstance(v, bytes):
-        raise EthernetException(f'ERROR: dst mac address is not bytes type {type(v)}')
+        raise EtherException(f'ERROR: dst mac address is not bytes type {type(v)}')
 
       if len(v) != self.__MAC_LEN:
-        raise EthernetException(f'ERROR: dst mac address should be {self.__MAC_LEN} bytes')
+        raise EtherException(f'ERROR: dst mac address should be {self.__MAC_LEN} bytes')
 
       self._dst = v.hex(':') #':'.join(map(tohex, v))
 
@@ -133,9 +133,9 @@ class Ethernet(Layer):
   proto   = property(**proto())
   src     = property(**src())
   dst     = property(**dst())
-#class Ethernet
+#class Ether
 
 
-class EthernetException(LayerException):
+class EtherException(LayerException):
   pass
-#class EthernetException
+#class EtherException

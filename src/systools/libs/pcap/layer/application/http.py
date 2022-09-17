@@ -7,6 +7,6 @@
 from ..layer import ApplicationLayer, ApplicationException
 
 
-class http(ApplicationLayer):
+class HTTP(ApplicationLayer):
   pass
 #class http

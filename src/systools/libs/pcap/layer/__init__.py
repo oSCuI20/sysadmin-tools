@@ -8,5 +8,5 @@
 #
 from .layer      import Layer, LayerException, ApplicationLayer, ApplicationException
 from .constants  import Constants
-from .datalink   import Ethernet, arp
-from .network    import ipv4
+from .datalink   import Ether, ARP
+from .network    import IPv4

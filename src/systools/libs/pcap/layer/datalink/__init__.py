@@ -6,5 +6,5 @@
 #
 # library
 #
-from .ethernet import Ethernet
-from .arp      import arp
+from .ethernet import Ether
+from .arp      import ARP

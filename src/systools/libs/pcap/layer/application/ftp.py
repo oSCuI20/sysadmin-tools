@@ -7,7 +7,7 @@
 from ..layer import ApplicationLayer, ApplicationException
 
 
-class ftp(ApplicationLayer):
+class FTP(ApplicationLayer):
 
   __client_commands = [
     'USER',  # This command sends the user identification to the server.

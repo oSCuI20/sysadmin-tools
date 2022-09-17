@@ -9,5 +9,5 @@
 from ..layer import Layer, LayerException
 
 
-class egp(Layer):
+class EGP(Layer):
   pass

@@ -9,12 +9,10 @@
 from ..layer import Layer, LayerException
 
 
-class icmp(Layer):
+class ICMP(Layer):
 
   _HEADER_LEN    = 8
   _unpack_format = '!BBHHH'
-
-
 
   __type       = None  #1 byte
   __code       = None  #1 byte

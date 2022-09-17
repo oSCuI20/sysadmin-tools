@@ -9,7 +9,7 @@
 from ..layer import Layer, LayerException
 
 
-class igmp(Layer):
+class IGMP(Layer):
 
   _HEADER_LEN    = 8
   _unpack_format = '!BBHL'
