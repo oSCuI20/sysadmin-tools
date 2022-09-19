@@ -6,7 +6,10 @@
 #
 # ipv4 packet building
 #
-from struct import pack
+from libs.pcap import checksum
+from .         import EtherPacket
+
+from struct import pack, unpack
 
 
 class IPv4Packet(object):
@@ -28,24 +31,27 @@ class IPv4Packet(object):
 
   ethertype = 0x0800
 
-  def __init__(self, src, dst, protocol, length, id):
-    self.src = src
-    self.dst = dst
+  def __init__(self, target, sender, protocol, length, id):
+    self.dst = target['ipaddr']
+    self.src = sender['ipaddr']
     self.protocol = protocol
     self.t_length = length
     self.identifier = id
+
+    self.ether = EtherPacket(target['hwaddr'], sender['hwaddr'], self.ethertype)
   #__init__
 
   @property
   def raw(self):
-    return self.version_length + self.type + self.t_length + self.identifier + \
+    return self.ether.raw + \
+           self.version_length + self.type + self.t_length + self.identifier + \
            self.flag_fragment + self.ttl + self.protocol + self.checksum + \
            self.src + self.dst
   #raw
-  
+
   @property
   def version_length(self):
-    return pack('!B', self.__version << 4 | self.__h_length)
+    return pack('!B', (self.__version << 4) | self.__h_length // 4)
   #version_length
 
   @property
@@ -58,7 +64,7 @@ class IPv4Packet(object):
 
   @t_length.setter
   def t_length(self, v):
-    self.__t_length = v
+    self.__t_length = v + self.__h_length
   #t_length
 
   @property
@@ -83,26 +89,18 @@ class IPv4Packet(object):
   @property
   def protocol(self):
     return pack('!B', self.__protocol)
+
+  @protocol.setter
+  def protocol(self, v):
+      self.__protocol = v
   #protocol
 
   @property
   def checksum(self):
-    ip_header = unpack('!10H', self.version_length + self.type + self.t_length + self.identifier +
-                self.flag_fragment + self.ttl + self.protocol + pack('!H', 0x00) +
-                self.src + self.dst)
-
-    checksum, counter, maxcounter = (0, 0, len(ip_header))
-    checksum = 0
-    while counter < maxcounter:
-      checksum += ip_header[counter]
-      checksum &= 0xffffffff
-      counter  += 1
-    #endwhile
-
-    checksum = (checksum >> 16) + (checksum & 0xffff)
-    checksum = checksum + (checksum >> 16)
-
-    return pack('!H', ~checksum & 0xffff)
+    ip = self.version_length + self.type + self.t_length + self.identifier + \
+         self.flag_fragment + self.ttl + self.protocol + pack('!H', 0x00) + \
+         self.src + self.dst
+    return pack('!H', checksum(unpack('!' + 'H' * (len(ip) // 2), ip)))
   #ip_checksum
 
   @property

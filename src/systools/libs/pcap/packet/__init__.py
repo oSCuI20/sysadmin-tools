@@ -6,7 +6,7 @@
 #
 # library
 #
-from .arp   import ARPPacket
 from .ether import EtherPacket
-from .icmp  import ICMPPacket
 from .ipv4  import IPv4Packet
+from .arp   import ARPPacket
+from .icmp  import ICMPPacket

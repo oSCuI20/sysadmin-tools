@@ -6,6 +6,8 @@
 #
 # arp packet building
 #
+from . import EtherPacket
+
 from struct import pack
 
 
@@ -25,33 +27,31 @@ class ARPPacket(object):
 
   ethertype = 0x0806
 
-  def __init__(self, target, sender, target_ip, sender_ip):
-    self.tha = target
-    self.sha = sender
-    self.tpa = target_ip
-    self.spa = sender_ip
+  def __init__(self, target, sender):
+    self.tha = target['hwaddr']
+    self.sha = sender['hwaddr']
+    self.tpa = target['ipaddr']
+    self.spa = sender['ipaddr']
+
+    self.ether = EtherPacket(target['hwaddr'], sender['hwaddr'], self.ethertype)
   #__init__
 
-  def __request(self):
-    self.__op = 0x01
-  #request
-
-  def __reply(self):
-    self.__op = 0x02
-  #reply
+  def __raw(self):
+    return self.ether.raw + \
+           self.htype + self.ptype + self.hlen + self.plen + self.op + \
+           self.sha + self.spa + self.tha + self.tpa
+  #raw
 
   @property
   def raw_request(self):
-    self.__request()
-    return self.htype + self.ptype + self.hlen + self.plen + self.op + \
-           self.sha + self.spa + self.tha + self.tpa
+    self.__op = 0x01
+    return self.__raw()
   #raw_request
 
   @property
   def raw_reply(self):
-    self.__reply()
-    return self.htype + self.ptype + self.hlen + self.plen + self.op + \
-           self.sha + self.spa + self.tha + self.tpa
+    self.__op = 0x02
+    return self.__raw()
   #raw_reply
 
   @property

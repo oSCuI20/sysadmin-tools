@@ -1,35 +1,43 @@
 # -*- coding: utf-8 -*-
 #
-# ./netpacket/wakeonlan.py
+# ./libs/pcap/packet/wakeonlan.py
 # Eduardo Banderas Alba
 # 2022-09
 #
+# WOL Packet building
+#
+from . import EtherPacket
+
 from struct import pack
 
 
 class WakeOnLanPacket(object):
 
-  __ethertype = pack('!H', 0x0842)
-  __mac_dst   = pack('!6B', *(0xff, 0xff, 0xff, 0xff, 0xff, 0xff))  # broadcast
-  __mac_src   = None
+  __dst = None
+  __src = None
 
-  __mac_target = None  # 96 bytes - 16 duplications of the IEEE address
+  __broadcast  = pack('!6B', *(0xff, 0xff, 0xff, 0xff, 0xff, 0xff))
   __password   = b''  # 0, 4 or 6 bytes
 
-  def __init__(self, src, target, password=None):
-    self.mac_src    = src
-    self.mac_target = target
+  ethertype = 0x0842
+
+  def __init__(self, target, sender, password=None):
+    self.dst = target['hwaddr']
+    self.src = sender['hwaddr']
+
     if password:
       self.password = password
+
+    self.ether = EtherPacket(dst='ff:ff:ff:ff:ff:ff', sender['hwaddr'], self.ethertype)
   #__init__
 
-  def payload(self):
-    return self.mac_dst + \
-           self.mac_src + \
-           self.ethertype + \
-           self.mac_dst + \
-           self.mac_target + \
-           self.password
+  @property
+  def raw(self):
+    return self.ether.raw + self.broadcast + self.dst + self.password
+
+  @property
+  def broadcast(self):
+    return self.__broadcast
 
   @property
   def password(self):
@@ -54,35 +62,22 @@ class WakeOnLanPacket(object):
       max_pack = 6
 
     self.__password = v[:max_pack]
+  #password
 
   @property
-  def ethertype(self):
-    return self.__ethertype
+  def src(self):
+    return self.__src
 
-  @ethertype.setter
-  def ethertype(self, v):
-    self.__ethertype = pack('!H', v)
-
-  @property
-  def mac_src(self):
-    return self.__mac_src
-
-  @mac_src.setter
-  def mac_src(self, v):
-    self.__mac_src = bytes.fromhex(''.join([ f'{int(x, 16):02x}' for x in v.split(':') ]))
+  @src.setter
+  def src(self, v):
+    self.__src = bytes.fromhex(''.join([ f'{int(x, 16):02x}' for x in v.split(':') ]))
+  #src
 
   @property
-  def mac_dst(self):
-    return self.__mac_dst
+  def dst(self):
+    return self.__dst
 
-  @mac_dst.setter
-  def mac_dst(self, v):
-    self.__mac_dst = bytes.fromhex(''.join([ f'{int(x, 16):02x}' for x in v.split(':') ]))
-
-  @property
-  def mac_target(self):
-    return self.__mac_target
-
-  @mac_target.setter
-  def mac_target(self, v):
-    self.__mac_target = bytes.fromhex(''.join([ f'{int(x, 16):02x}' for x in v.split(':') ])) * 16
+  @dst.setter
+  def dst(self, v):
+    self.__dst = bytes.fromhex(''.join([ f'{int(x, 16):02x}' for x in v.split(':') ])) * 16
+  #dst

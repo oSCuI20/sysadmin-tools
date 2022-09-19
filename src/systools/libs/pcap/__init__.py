@@ -6,5 +6,6 @@
 #
 # library
 #
-from .layer  import *
-from .packet import *
+from ._checksum import checksum
+from .layer     import *
+from .packet    import *
