@@ -89,7 +89,7 @@ class ICMP(Layer):
   __types_codes_reserved = [ 0x01, 0x02, 0x07 ] + list(range(0x13, 0x1E)) + list(range(0x2A, 0x100))
 
   properties = [ 'type', 'code', 'checksum',
-                 'id', 'seq_number', 'pktmessage' ]
+                 'id', 'seq_number', 'pktmessage', 'pktdata' ]
 
   def __init__(self, raw):
     super().__init__(raw)

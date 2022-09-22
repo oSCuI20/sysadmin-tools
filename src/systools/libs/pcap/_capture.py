@@ -11,7 +11,7 @@ from ._pcap        import pcap_next_ex, pcap_compile, pcap_setfilter
 from .layer        import Ether
 
 from ctypes import c_int, c_ubyte, byref, POINTER
-from time   import sleep
+from time   import sleep, time
 from struct import pack
 
 
@@ -21,22 +21,26 @@ class Capture(PCAPHandle):
     self.setFilter()
   #__initialize__
 
-  def sniff(self):
+  def sniff(self, timeout=0):
+    start = time()
     counter = 0
-    while (self.limit.value == -1     and not self.terminate) or \
-          (self.limit.value > counter and not self.terminate):
+    while (not self.terminate and self.limit.value == -1) or \
+          (not self.terminate and self.limit.value > counter):
       if pcap_next_ex(self.handle, byref(self.pkthdr), byref(self.pktdata)) == 1:
         caplen = self.pkthdr.contents.caplen
         packet = Ether(pack('B' * caplen, *self.pktdata.contents[:caplen]))
-
         if self.callback:
           self.callback(packet)
 
-        #self.logger.log((-1, packet))
+        self.logger.debug(packet)
         counter += 1
       #endif
 
-      sleep(0.1)
+      if timeout and time() - start > timeout:
+        break
+
+      if not timeout:
+        sleep(0.1)
     #endwhile
   #sniff
 
@@ -49,6 +53,8 @@ class Capture(PCAPHandle):
 
     if pcap_setfilter(self.handle, byref(self.bpf)) == -1:
       raise Exception(f'error, pcap setfilter failure: {pcap_geterr(self.handle)}')
+
+    self.logger.log((-1, f'setFilter {self.filter.decode()}'))
   #setFilter
 
   @property

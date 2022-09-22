@@ -6,4 +6,6 @@
 #
 # modules
 #
-from .device import Device
+from .config     import cfg
+from .device     import dev
+from .networking import NetStatus

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# ./libs/device.py
+# ./modules/device.py
 # Eduardo Banderas Alba
 # 2022-09
 #
@@ -22,26 +22,28 @@ from uuid   import uuid4 as uuid  # UUID V4
 from fcntl  import ioctl
 from struct import pack, unpack
 
-from utils import readfile, writefile
+from utils import Logger, readfile, writefile
 
 
 class Device(object):
 
-  def __init__(self):
-    self.__hostname  = None
-    self.__cpu_model = None
-    self.__meminfo   = None
-    self.__system    = None
-    self.__loadavg   = None
-    self.__uptime    = None
-    self.__ifaces    = None
-    self.__disks     = None
-    self.__process   = None
-    self.__routing   = None
+  __hostname  = None
+  __cpu_model = None
+  __meminfo   = None
+  __system    = None
+  __loadavg   = None
+  __uptime    = None
+  __iface     = None
+  __ifaces    = None
+  __disks     = None
+  __process   = None
+  __routing   = None
+  __hwinfo    = None
+  __arpcache  = None
+  __fileinfo  = f'{os.getcwd()}/.device-info'
 
-    self.__fileinfo  = f'{os.getcwd()}/.device-info'
-    self.__hwinfo    = None
-  #__init__
+  def __init__(self):
+    self.logger = Logger()
 
   def __iter__(self):
     yield from {
@@ -54,7 +56,8 @@ class Device(object):
       'meminfo': self.meminfo,
       'hostname': self.hostname,
       'cpu_model': self.cpu_model,
-      'hwinfo': self.hwinfo
+      'hwinfo': self.hwinfo,
+      'arpcache': self.arpcache,
     }.items()
   #__iter__
 
@@ -79,6 +82,23 @@ class Device(object):
 
     return info
   #__get_device_info__
+
+  @property
+  def arpcache(self):
+    if not self.__arpcache:
+      self.__arpcache = {}
+
+      info = readfile('/proc/net/arp').split('\n')
+      info.pop(0)  # rm first line
+
+      for i in info:
+        ipaddr, hwtype, flags, hwaddr, mask, device = i.split()
+        self.__arpcache[ipaddr] = hwaddr
+      #endfor
+    #endif
+
+    return self.__arpcache
+  #arpcache
 
   @property
   def hwinfo(self):
@@ -112,6 +132,7 @@ class Device(object):
       #endif
 
       self.__hwinfo['product'].update(about_device)
+    #endif
 
     return self.__hwinfo
   #hwinfo
@@ -138,6 +159,7 @@ class Device(object):
           'cmdline': readfile(f'{p}/cmdline')
         })
       #endfor
+    #endif
 
     return self.__process
   #process
@@ -148,14 +170,14 @@ class Device(object):
       self.__routing = []
 
       info = readfile('/proc/net/route').split('\n')
-      headers = [ _.strip() for _ in info.pop(0).split('\t') if _ ]
+      headers = [ _.strip().lower() for _ in info.pop(0).split('\t') if _ ]
 
       for d in info:
         values = d.split('\t')
         route  = { _: None for _ in headers }
         for i in range(0, len(headers)):
           val = None
-          if headers[i] in [ 'Destination', 'Gateway', 'Mask' ]:
+          if headers[i] in [ 'destination', 'gateway', 'mask' ]:
             adr = unpack('!BBBB', bytearray.fromhex(values[i]))
             val = '.'.join([ str(adr[x]) for x in range(len(adr) -1, -1, -1) ])
           else:
@@ -163,6 +185,7 @@ class Device(object):
 
           route[headers[i]] = val
         #endfor
+
         self.__routing.append(route)
       #endfor
     #endif
@@ -179,22 +202,50 @@ class Device(object):
   #opersystem
 
   @property
+  def interface(self):
+    if not self.__iface:
+
+      for iface, val in self.interfaces.items():
+        if self.__iface or not val['ipaddr']: continue
+
+        self.__iface = {
+          iface: val
+        }
+      #endfor
+    #endif
+
+    return self.__iface
+
+  @interface.setter
+  def interface(self, v):
+    if v not in self.interfaces:
+      raise Exception(f'interface {v} not found')
+
+    self.__iface = { v: self.interfaces.get(v) }
+  #interface
+
+  @property
   def interfaces(self):
     if not self.__ifaces:
-      self.__ifaces = []
+      self.__ifaces = {}
       path = '/sys/class/net'
 
       for iface in os.listdir(path):
         if iface == 'lo':   continue  # ignore loopback
 
-        hwaddr, ipaddr, netmask = self.__getifaceinfo(iface.encode())
-
-        self.__ifaces.append({
-          'interface': iface,
-          'hwaddr':  hwaddr,
-          'ipaddr':  ipaddr,
-          'netmask': netmask
+        hwaddr, ipaddr, netmask, gateway, network, cidr = self.__getifaceinfo(iface.encode())
+        self.__ifaces.update({
+          iface: {
+            'hwaddr': hwaddr,
+            'ipaddr': ipaddr,
+            'netmask': netmask,
+            'gateway': gateway,
+            'network': network,
+            'cidr': cidr
+          }
         })
+      #endfor
+    #endif
 
     return self.__ifaces
   #interfaces
@@ -233,6 +284,7 @@ class Device(object):
           'partitions': partitions
         }})
       #endfor
+    #endif
 
     return self.__disks
   #disks
@@ -281,6 +333,7 @@ class Device(object):
           self.__cpu_model = f'{c.split(":")[1].strip()}'
         #endif
       #endfor
+    #endif
 
     return self.__cpu_model
   #cpu_model
@@ -310,18 +363,46 @@ class Device(object):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     __io = { 'ipaddr' : 0x8915, 'hwaddr' : 0x8927, 'netmask': 0x891b }
 
-    hwaddr, ipaddr, netmask = (None, None, None)
+    hwaddr, ipaddr, netmask, gateway, network, cidr = (None, None, None, None, None, None)
 
     try:
       hwaddr  = ioctl(sock.fileno(), __io['hwaddr'],  pack('256s', iface))[18:24]
       ipaddr  = ioctl(sock.fileno(), __io['ipaddr'],  pack('256s', iface))[20:24]
       netmask = ioctl(sock.fileno(), __io['netmask'], pack('256s', iface))[20:24]
+
+      gateway = self.__getgateway(iface.decode())
     except:
       pass
 
-    if hwaddr:       hwaddr  = hwaddr.hex(':')
-    if ipaddr:       ipaddr  = socket.inet_ntoa(ipaddr)
-    if netmask:      netmask = socket.inet_ntoa(netmask)
+    if hwaddr:    hwaddr  = hwaddr.hex(':')
+    if ipaddr:    ipaddr  = socket.inet_ntoa(ipaddr)
+    if netmask:   netmask = socket.inet_ntoa(netmask)
 
-    return (hwaddr, ipaddr, netmask)
+    if ipaddr and netmask:
+      network, cidr = self.__getnetwork(ipaddr, netmask)
+
+    return (hwaddr, ipaddr, netmask, gateway, network, cidr)
+  #__getifaceinfo
+
+  def __getgateway(self, iface):
+    for route in self.routing:
+      if route['iface'] == iface:
+        return route['gateway']
+    #endfor
+  #__getgateway
+
+  def __getnetwork(self, ipaddr, netmask):
+    addr = [ int(x) for x in ipaddr.split('.') ]
+    cidr = int(sum([ bin(int(x)).count('1') for x in netmask.split('.') ]))
+
+    mask = [0, 0, 0, 0]
+    for i in range(cidr):
+      mask[i // 8] = mask[i // 8] + (1 << (7 - i % 8))
+
+    network = '.'.join(map(str, [ addr[i] & mask[i] for i in range(4) ]))
+
+    return (network, cidr)
 #class Device
+
+
+dev = Device()

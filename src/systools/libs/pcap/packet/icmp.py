@@ -42,7 +42,11 @@ class ICMPPacket(object):
 
   @property
   def data(self):
-    return b''
+    return self.__data
+
+  @data.setter
+  def data(self, v):
+    self.__data = pack('d', v)
   #data
 
   @property

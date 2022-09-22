@@ -25,8 +25,6 @@ class SendPacket(PCAPHandle):
 
       if pcap_sendpacket(self.handle, packet, len(packet)) != 0:
         self.logger.log((-3, f'the packet could not be sent, {pcap_geterr(self.handle)}'))
-
-      sleep(0.1)
     #endfor
   #send
 #class SendPacket

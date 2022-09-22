@@ -25,7 +25,7 @@ class EtherPacket(object):
       raise EtherPacketException('Can not make packet')
 
     if len(self.raw) != self.__RAW_LEN:
-      raise EtherPacketException('')
+      raise EtherPacketException('ethernet frame must be 14 bytes')
   #__init__
 
   @property
