@@ -100,7 +100,8 @@ class NetStatus(object):
         'max': round(latmax, 4),
         'avg': round(latavg, 4)
       },
-      'jitter': round(jitter[-1], 4)
+      'jitter': round(jitter[-1], 4),
+      'mos': round(mos, 4)
     }
   #latency
 
