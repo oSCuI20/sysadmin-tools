@@ -8,4 +8,4 @@
 #
 from .config     import cfg
 from .device     import dev
-from .networking import NetStatus
+from .networking import NetStatus, NetScanner

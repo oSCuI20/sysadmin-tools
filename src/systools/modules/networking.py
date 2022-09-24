@@ -3,6 +3,8 @@
 # ./modules/networking.py
 # Eduardo Banderas Alba
 # 2022-09
+import nmap
+
 from time   import time, sleep
 from struct import unpack
 
@@ -80,14 +82,20 @@ class NetStatus(object):
         tm_first_recv = end
 
       drtt = (start - tm_first_sent) - (end - tm_first_recv)
-      jitter.append(jitter[-1] + (abs(drtt) - jitter[-1]) / 16)
+      jitter.append(round(jitter[-1] + (abs(drtt) - jitter[-1]) / 16, 4))
     #endwhile
 
     latmin, latmax, latavg = (-1, -1, -1)
 
     if len(latency) > 0:
       mos = self.__get_mos(latency, jitter, lost)
-      latmin, latmax, latavg = (min(latency), max(latency), sum(latency) / len(latency))
+      latmin, latmax, latavg = (round(min(latency), 4),
+                                round(max(latency), 4),
+                                round(sum(latency) / len(latency), 4))
+
+    self.logger.log((-1, f'packet total: {num}, lost: {lost}'))
+    self.logger.log((-1, f'latency min: {latmin}, max: {latmax}, avg: {latavg}'))
+    self.logger.log((-1, f'jitter {jitter[-1]}, mos: {mos}'))
 
     return {
       'packet': {
@@ -96,12 +104,12 @@ class NetStatus(object):
         'percent': round((lost / num) * 100, 4)
       },
       'latency': {
-        'min': round(latmin, 4),
-        'max': round(latmax, 4),
-        'avg': round(latavg, 4)
+        'min': latmin,
+        'max': latmax,
+        'avg': latavg
       },
-      'jitter': round(jitter[-1], 4),
-      'mos': round(mos, 4)
+      'jitter': jitter[-1],
+      'mos': mos
     }
   #latency
 
@@ -116,7 +124,7 @@ class NetStatus(object):
       r -= (effective - 120) / 10
       r -= lost * 2.5
 
-    return 1 + (0.035) * r + (0.000007) * r * (r - 60) * (100 - r)
+    return round(1 + (0.035) * r + (0.000007) * r * (r - 60) * (100 - r), 4)
   #__get_mos
 
   def cb_capture(self, packet):
@@ -206,8 +214,39 @@ class NetStatus(object):
 
 
 class NetScanner(object):
-
+  """
+    use nmap module
+    options arguments are equals that nmap options
+  """
   def __init__(self):
-    pass
+    self.logger = Logger()
+    self.nm = nmap.PortScanner()
   #__init__
+
+  def alive(self, network, exclude=[]):
+    options = '-sP -PE -PA21,23,80,135,137,139,443,445,3389'
+
+    if len(exclude) > 0:
+      options += f' --exclude {",".join(exclude)}'
+
+    self.logger.log((-1, f'scan {network} with options {options}, exclude {",".join(exclude)}'))
+
+    stats, scan = self.nm.scan(network, arguments=options).values()
+
+    self.logger.log((-1, f'stats: uphosts, {stats["scanstats"]["uphosts"]} ' +
+                         f'elapsed, {stats["scanstats"]["elapsed"]}'))
+
+    return scan
+  #alive
+
+  def host(self, target, options='-T4 -O -sT -sV -p-'):
+    self.logger.log((-1, f'fullscan {target} wiht options {options}'))
+
+    stats, scan = self.nm.scan(target, arguments=options).values()
+
+    self.logger.log((-1, f'stats: uphosts: {stats["scanstats"]["uphosts"]} ' +
+                         f'elapsed, {stats["scanstats"]["elapsed"]}'))
+
+    return scan
+  #scan
 #class NetScanner
