@@ -6,6 +6,7 @@
 #
 # modules
 #
-from .config     import cfg
-from .device     import dev
+from .device     import Device
+from .config     import Config
 from .networking import NetStatus, NetScanner
+from .sshtunnel  import SSHTunnel

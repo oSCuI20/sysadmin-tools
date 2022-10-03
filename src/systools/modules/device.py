@@ -25,7 +25,7 @@ from struct import pack, unpack
 from utils import Logger, readfile, writefile
 
 
-class Device(object):
+class Device:
 
   __hostname  = None
   __cpu_model = None
@@ -139,29 +139,28 @@ class Device(object):
 
   @property
   def process(self):
-    if not self.__process:
-      self.__process = []
-      path = '/proc'
-      for pid in os.listdir(path):
-        if not pid.isdigit():
-          continue
+    process = {}
+    path = '/proc'
+    for pid in os.listdir(path):
+      if not pid.isdigit():
+        continue
 
-        p = f'{path}/{pid}'
-        if not os.path.exists(p):
-          continue
+      p = f'{path}/{pid}'
+      if not os.path.exists(p):
+        continue
 
-        st = os.stat(p)
+      st = os.stat(p)
 
-        self.__process.append({
+      process.update({
+        int(pid): {
           'uid': st.st_uid,
           'gid': st.st_gid,
-          'pid': pid,
           'cmdline': readfile(f'{p}/cmdline')
-        })
-      #endfor
-    #endif
+        }
+      })
+    #endfor
 
-    return self.__process
+    return process
   #process
 
   @property
@@ -405,4 +404,4 @@ class Device(object):
 #class Device
 
 
-dev = Device()
+Device = Device()

@@ -9,13 +9,18 @@
 
 class Config:
   logger = {
-    'default': '/var/log/sysadmins-tools/sysadmins.log',
-    'device': '/var/log/sysadmins-tools/device.log',
-    'netstatus': '/var/log/sysadmins-tools/netstatus.log',
+    'default'   : '/var/log/sysadmins-tools/sysadmins.log',
+    'device'    : '/var/log/sysadmins-tools/device.log',
+    'netstatus' : '/var/log/sysadmins-tools/netstatus.log',
     'netscanner': '/var/log/sysadmins-tools/netscanner.log'
   }
 
   endpoint = 'http://my-domain-example.com/systools'
-#class Config
 
-cfg = Config()
+  delay = {
+    'netstatus': 3600,
+    'netscanner': 7200
+  }
+
+  pidpath = './pidfiles'
+#class Config

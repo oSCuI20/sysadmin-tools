@@ -3,13 +3,14 @@
 # ./modules/networking.py
 # Eduardo Banderas Alba
 # 2022-09
+#
 import nmap
 
 from time   import time, sleep
 from struct import unpack
 
 from utils     import Logger
-from modules   import dev, cfg
+from modules   import Device, Config
 from libs      import SendPacket, Capture
 from libs.pcap import ARPPacket, ICMPPacket
 
@@ -27,14 +28,14 @@ class NetStatus(object):
 
   def __init__(self, target):
     self.logger = Logger()
-    self.logger.logfile = cfg.logger['default']
+    self.logger.logfile = Config.logger['default']
 
-    if self.__class__.__name__.lower() in cfg.logger:
-      self.logger.logfile = cfg.logger[self.__class__.__name__.lower()]
+    if self.__class__.__name__.lower() in Config.logger:
+      self.logger.logfile = Config.logger[self.__class__.__name__.lower()]
 
     self.logger.log((-1, 'Init NetStatus'))
 
-    self.iface, self.sender = list(dev.interface.items()).pop()
+    self.iface, self.sender = list(Device.interface.items()).pop()
 
     self.target = target
 
@@ -174,14 +175,14 @@ class NetStatus(object):
 
     network = '.'.join(map(str, [ addr[i] & mask[i] for i in range(4) ]))
 
-    if self.sender['gateway'] in dev.arpcache:
-      self.target['hwaddr'] = dev.arpcache[self.sender['gateway']]
+    if self.sender['gateway'] in Device.arpcache:
+      self.target['hwaddr'] = Device.arpcache[self.sender['gateway']]
 
     if network == self.sender['network']:
       self.target['hwaddr'] = MAC_BROADCAST
 
-      if self.target['ipaddr'] in dev.arpcache:
-        self.target['hwaddr'] = dev.arpcache[self.target['ipaddr']]
+      if self.target['ipaddr'] in Device.arpcache:
+        self.target['hwaddr'] = Device.arpcache[self.target['ipaddr']]
       else:
         target = self.target.copy()
         self.target['hwaddr'] = self.__get_hwaddr(target)
