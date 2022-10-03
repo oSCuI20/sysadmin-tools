@@ -3,25 +3,29 @@
 # ./utils/daemon.py
 # Eduardo Banderas Alba
 # 2022-09
-import os, sys
-import io, atexit
+#
+import os
+import sys
+import io
+import atexit
 
 from signal import SIGTERM, SIGKILL
 from time   import sleep
 
-from utils  import Logger, readfile, writefile
+from utils import Logger, readfile, writefile
 
 
 class Daemon:
 
-  def __init__(self, pidfile=None, stdin=None, stdout=None, stderr=None):
+  def __init__(self, pidpath=None, stdin=None, stdout=None, stderr=None):
     self.__stdin  = stdin  or '/dev/null'
     self.__stdout = stdout or '/dev/null'
     self.__stderr = stderr or '/dev/null'
 
     self.logger = Logger()
 
-    self.__pidfile = pidfile or f'{os.getcwd}/pidfile/daemon.pid'
+    self.__pidfile = f'{pidpath}/daemon.pid'
+
     self.logger.debug(f'pid file {self.__pidfile}')
 
     self.__initialize__()
